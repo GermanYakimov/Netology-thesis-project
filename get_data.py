@@ -4,6 +4,7 @@ import time
 import progressbar
 import sys
 import copy
+import json
 
 
 v = '5.69'
@@ -121,3 +122,7 @@ unique_communities = find_unique_communities(user_communities, user_friends_comm
 print('Получение информации о сообществах', file=sys.stderr)
 unique_communities = communities_get_info(unique_communities)
 pprint(unique_communities)
+print(len(unique_communities))
+
+with open('result.json', 'w') as file:
+    json.dump(unique_communities, file, indent=4)
