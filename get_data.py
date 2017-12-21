@@ -38,23 +38,23 @@ def get_friends(user_id):
 
 
 def get_communities(users):
-    communities = dict()
+    communities = []
 
     with progressbar.ProgressBar(max_value=len(users)) as bar:
         for i, user in enumerate(users):
             try:
-                communities[user] = requests.get('https://api.vk.com/method/groups.get', params={
+                communities.extend(requests.get('https://api.vk.com/method/groups.get', params={
                     'v': v,
                     'user_id': user,
                     'access_token': access_token
-                }).json()['response']['items']
+                }).json()['response']['items'])
                 time.sleep(1)
                 bar.update(i)
             except:
                 continue
 
     print('\n')
-    return communities
+    return set(communities)
 
 
 def communities_get_info(communities):

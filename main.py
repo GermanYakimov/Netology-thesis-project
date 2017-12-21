@@ -9,7 +9,7 @@ user_short_name, user_id = get_data.input_user_id()
 user_friends = get_data.get_friends(user_id)
 
 print('Получение сообществ пользователя', file=sys.stderr)
-user_communities = get_data.get_communities([user_id])[user_id]
+user_communities = get_data.get_communities([user_id])
 
 print('Получение сообществ друзей пользователя', file=sys.stderr)
 user_friends_communities = get_data.get_communities(user_friends)
