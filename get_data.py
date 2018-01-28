@@ -2,6 +2,8 @@ import requests
 import time
 import progressbar
 import copy
+import sys
+from analyze import find_unique_communities
 
 
 v = '5.69'
@@ -18,28 +20,8 @@ def get_id_by_short_name(short_name):
     return user_id
 
 
-def input_user_id():
-    user_id = input('Введите id или короткое имя (screen name) пользователя: ')
-    short_name = user_id
-    if not str(user_id).isdigit():
-        user_id = get_id_by_short_name(user_id)
-
-    return short_name, user_id
-
-
-def get_friends(user_id):
-    user_friends = requests.get('https://api.vk.com/method/friends.get', params={
-        'v': v,
-        'user_id': user_id,
-        'access_token': access_token
-    }).json()['response']['items']
-
-    return user_friends
-
-
 def get_communities(users):
     communities = []
-
     with progressbar.ProgressBar(max_value=len(users)) as bar:
         for i, user in enumerate(users):
             try:
@@ -58,6 +40,9 @@ def get_communities(users):
 
 
 def communities_get_info(communities):
+    if not communities:
+        return []
+
     communities_str = ''
     with progressbar.ProgressBar(max_value=len(communities)) as bar:
         for i, community in enumerate(communities):
@@ -73,7 +58,7 @@ def communities_get_info(communities):
         })
 
     communities_info = response.json()['response']
-    communities = []
+    communities = list()
     tmp_group = dict()
     # group = {'name': 'name', 'members_count': count}
     for group in communities_info:
@@ -86,3 +71,37 @@ def communities_get_info(communities):
         communities = copy.deepcopy(communities)
 
     return communities
+
+
+class User:
+    def __init__(self):
+        self.short_name = ''
+        self.id = -1
+        self.friends = list()
+        self.communities = list()
+        self.friends_communities = set()
+        self.unique_groups = list()
+
+    def input_user_id(self):
+        self.short_name = input('Введите id или короткое имя (screen name) пользователя: ')
+        if not str(self.short_name).isdigit():
+            self.id = get_id_by_short_name(self.short_name)
+
+    def get_friends(self):
+        self.friends = requests.get('https://api.vk.com/method/friends.get', params={
+            'v': v,
+            'user_id': self.id,
+            'access_token': access_token
+        }).json()['response']['items']
+
+    def get_user_communities(self):
+        print('Получение сообществ пользователя', file=sys.stderr)
+        self.communities = get_communities([self.id])
+
+    def get_friends_communities(self):
+        print('Получение сообществ друзей пользователя', file=sys.stderr)
+        self.friends_communities = get_communities(self.friends)
+
+    def find_unique_groups(self):
+        print('Анализ сообществ пользователя и поиск уникальных, получение информации о сообществах', file=sys.stderr)
+        self.unique_groups = communities_get_info(find_unique_communities(self.communities, self.friends_communities))
